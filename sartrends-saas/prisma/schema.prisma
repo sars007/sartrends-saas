@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"  // Easy local dev, change to postgresql prod
+}
+
+enum Plan {
+  free
+  pro
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  credits   Int      @default(10)
+  plan      Plan     @default(free)
+  expiresAt DateTime?
+  businesses  Json?   // Array of business summaries
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  aiChats   AiChat[]
+  orders    Order[]
+  aiLogs    AiLog[]
+  startupIdeas StartupIdea[]
+  @@map("users")
+}
+
+model StartupIdea {
+  id              String     @id @default(cuid())
+  userId          String
+  niche           String
+  description     String
+  businessModel   String
+  validationScore Float?
+  status          String     @default("draft") // draft, validated, launched
+  createdAt       DateTime   @default(now())
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businesses      Business[]
+  @@map("startup_ideas")
+}
+
+model Business {
+  id          String    @id @default(cuid())
+  startupId   String?
+  name        String
+  url         String?
+  revenueYTD  Float     @default(0)
+  analytics   Json?
+  status      String    @default("active")
+  createdAt   DateTime  @default(now())
+  idea        StartupIdea? @relation(fields: [startupId], references: [id])
+  @@map("businesses")
+}
+
+model AiChat {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("ai_chats")
+}
+
+model Order {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("orders")
+}
+
+model AiLog {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("ai_logs")
+}
