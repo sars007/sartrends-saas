@@ -1,6 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { getClientSession } from '@/components/ui/auth-utils'
+import { exportPDF, exportDocx, exportMarkdown } from '@/lib/export'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -21,6 +24,27 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function HSEGenerator() {
+  const [session, setSession] = useState(null)
+  const [credits, setCredits ] = useState(0)
+  const [isPaid, setIsPaid ] = useState(false)
+  const [docType, setDocType ] = useState('risk')
+  const [lowCredits, setLowCredits ] = useState(false)
+
+  useEffect(() => {
+    const init = async () => {
+      const s = await getClientSession()
+      setSession(s)
+      if (s?.user?.id) {
+        const res = await fetch('/api/user/credits')
+        const { credits: c } = await res.json()
+        setCredits(c)
+        setIsPaid(s.user.isPaid)
+        setLowCredits(c < 5 && !s.user.isPaid)
+      }
+    }
+    init()
+  }, [])
+
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [templates, setTemplates] = useState<any[]>([])
@@ -31,31 +55,32 @@ export default function HSEGenerator() {
     defaultValues: { title: '', details: '', templateId: '' }
   })
 
-  // Fetch templates
-  // useEffect...
+useEffect(() => {
+    if (session?.user?.id) {
+      fetch('/api/templates').then(res => res.json()).then(({ templates }) => setTemplates(templates || [])).catch(console.error);
+    }
+  }, [session]);
 
-  const onSubmit = async (data: FormData) => {
+const onSubmit = async (data: FormData) => {
+    if (lowCredits) {
+      alert('Low credits. Upgrade to premium or earn more.')
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
-        body: JSON.stringify({ type: 'hse', docType: 'risk', details: data, templateId: data.templateId }),
+        body: JSON.stringify({ type: 'hse', docType, details: data, templateId: data.templateId }),
       })
       const { content } = await res.json()
       setContent(content)
-    } catch {}
+    } catch (e) {
+      alert('Generation failed: ' + e)
+    }
     setLoading(false)
   }
 
-  const downloadPDF = () => {
-    if (!previewRef.current) return
-    html2canvas(previewRef.current).then(canvas => {
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF()
-      pdf.addImage(imgData, 'PNG', 0, 0)
-      pdf.save('hse-doc.pdf')
-    })
-  }
+
 
   return (
     <div className="p-8">
@@ -65,32 +90,57 @@ export default function HSEGenerator() {
           <CardContent className="p-6 space-y-4">
             <Input {...form.register('title')} placeholder="Document Title" />
             <Textarea {...form.register('details')} placeholder="Project details, location, activities..." rows={6} />
-            <select {...form.register('templateId')} className="p-3 border rounded w-full">
-              <option value="">Auto HSE</option>
+            <select value={docType} onChange={(e) => setDocType(e.target.value)} className="p-3 border rounded w-full">
               <option value="risk">Risk Assessment</option>
-              {/* templates */}
+              <option value="method-statement">Method Statement</option>
+              <option value="toolbox-talk">Toolbox Talk</option>
+              <option value="permit-work">Permit to Work</option>
             </select>
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? <Loader2 className="animate-spin" /> : <Bot />}
-              Generate
+<select {...form.register('templateId')} className="p-3 border rounded w-full">
+              <option value="">Auto HSE</option>
+              {templates.map((t: any) => (
+                <option key={t.id} value={t.id}>{t.name} ({t.type}) {t.isPremium ? '[Premium]' : ''}</option>
+              ))}
+            </select>
+            <Button type="submit" disabled={loading || lowCredits} className="w-full">
+              {loading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Bot className="mr-2 h-4 w-4" />}
+              {lowCredits ? 'Low Credits' : 'Generate HSE'}
             </Button>
+            {lowCredits && (
+              <Card variant="destructive" className="p-4">
+                <CardContent className="p-0">
+                  <div>Low credits. <a href="/upgrade" className="text-blue-600 underline">Upgrade</a> for unlimited access.</div>
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
         </Card>
       </form>
       {content && (
         <Card className="mt-8">
-          <CardContent>
-            <div ref={previewRef} className="prose max-w-none">
+          <CardContent className="p-6">
+            <div ref={previewRef} className="relative prose max-w-none">
               <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
+              {!isPaid && (
+                <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none z-10">
+                  <div className="text-white/90 text-4xl font-black rotate-[-15deg] tracking-widest uppercase drop-shadow-lg">PREMIUM UPGRADE REQUIRED</div>
+                </div>
+              )}
             </div>
-            <Button onClick={downloadPDF} className="mt-4">
-              <Download />
-              PDF
-            </Button>
+            <div className="space-y-2 mt-4">
+              <Button onClick={() => exportPDF(previewRef.current, form.getValues('title') || 'hse-doc')} disabled={!isPaid || lowCredits} className="w-full">
+                <Download className="mr-2 h-4 w-4" /> PDF
+              </Button>
+              <Button onClick={() => exportDocx(content, form.getValues('title') || 'hse-doc')} disabled={!isPaid || lowCredits} className="w-full" variant="outline">
+                DOCX
+              </Button>
+              <Button onClick={() => exportMarkdown(content, form.getValues('title') || 'hse-doc')} disabled={!isPaid || lowCredits} className="w-full" variant="outline">
+                Markdown
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
     </div>
   )
 }
-
