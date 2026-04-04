@@ -116,12 +116,41 @@ async function main() {
   // Delete existing templates to avoid duplicates
   await prisma.template.deleteMany()
   
+
   // Create all templates
   await prisma.template.createMany({
     data: templatesData
   })
 
+// Create admin user
+  const adminEmail = 'info@sartrends.store'
+  const adminPassword = 'Aliraza00721@'
+  
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail }
+  })
+
+  if (!existingAdmin) {
+    const hashedPassword = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZSA24GmLdmwvfUu5jS5KK1TVBzf46' // hashed Aliraza00721@
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        name: 'Sartrends Admin',
+        hashed_password: hashedPassword,
+        isAdmin: true,
+        credits: 9999,
+        isPaid: true,
+        plan: 'enterprise'
+      }
+    })
+    console.log(`Admin user created: ${adminEmail} (password: ${adminPassword})`)
+  } else {
+    console.log(`Admin user already exists: ${adminEmail}`)
+  }
+
+
   console.log(`Seeding completed. Added ${templatesData.length} templates.`)
+
 }
 
 main()

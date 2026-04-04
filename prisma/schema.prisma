@@ -10,26 +10,31 @@ datasource db {
   url      = "file:./dev.db.sqlite"
 }
 
+
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String?
-  credits   Int      @default(10)
-  isPaid    Boolean  @default(false)
-  plan      String   @default("free")
-  createdAt DateTime  @default(now())
-  Account   Account[]
-  sessions  Session[]
-
-  subscriptions        Subscription[]
-  payments            Payment[]
-  creditTransactions   CreditTransaction[]
-  documents            Document[]
-  orders               Order[]
-  dispatchLoads        DispatchLoad[]
-  reviews              Review[]
-
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?
+  role            UserRole  @default(user)
+  plan            String    @default("free")
+  createdAt       DateTime  @default(now())
+  // Existing fields preserved
+  name            String?
+  credits         Int       @default(10)
+  isPaid          Boolean   @default(false)
+  isAdmin         Boolean   @default(false) // Legacy, migrate later
+  Account         Account[]
+  sessions        Session[]
+  subscriptions   Subscription[]
+  payments        Payment[]
+  creditTransactions CreditTransaction[]
+  documents       Document[]
+  orders          Order[]
+  dispatchLoads   DispatchLoad[]
+  reviews         Review[]
+  aiRequestLogs   AIRequestLog[]
 }
+
 
 model Payment {
   id            String   @id @default(cuid())
@@ -176,8 +181,50 @@ model Review {
   userId    String
   orderId   String?
   user      User     @relation(fields: [userId], references: [id])
-  rating    Int      // 1-5
+  rating    Int      
   comment   String?
   createdAt DateTime @default(now())
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+model AIRequestLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt    String
+  response  String
+  tokensUsed Int     @default(0)
+  createdAt DateTime @default(now())
+}
+
+model FeatureFlags {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Boolean @default(false)
+}
+
+model SiteSettings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String // JSON string
+}
+
+model MediaLibrary {
+  id        String   @id @default(cuid())
+  url       String
+  type      String   // image, video
+  uploadedBy String?
+  createdAt DateTime @default(now())
+}
+
+model AIConfig {
+  id           String @id @default(cuid())
+  provider     String @default("openai")
+  systemPrompt String?
+  languageMode String @default("auto") // auto, manual
 }
 

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getSession } from '@/lib/session';
 import { prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
-  const session = await getSession(request.cookies());
+  const cookieStore = cookies();
+  const session = await getSession(cookies);
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const data = await request.formData();

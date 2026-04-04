@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/auth';
 import { getSession } from '@/lib/session';
-import { generateResume, generateCoverLetter, generateDocument, generateHSE, atsCheck } from '@/lib/ai';
-import { getUserCredits, hasSufficientCredits } from '@/lib/credits';
+import { prisma } from '@/lib/db';
+import { generateDocument, generateHSE } from '@/lib/ai-fixed';  // Use fixed AI
+import { hasSufficientCredits } from '@/lib/credits';
 
 export async function POST(request: NextRequest) {
+console.log('START AI GEN');
   try {
     const session = await getSession(cookies())
     if (!session?.user?.id) {
@@ -15,16 +16,21 @@ export async function POST(request: NextRequest) {
 
     const { type, details, templateId, docType, jobDesc } = await request.json();
 
+    // Premium/credits check for HSE/document (5 credits) - deduct handled in lib/ai
+    if (type === 'hse' || type === 'document') {
+      const hasCredits = await hasSufficientCredits(userId, 5);
+      if (!hasCredits) {
+        return NextResponse.json({ error: 'Insufficient credits. Upgrade or earn more.' }, { status: 402 });
+      }
+    }
+
     let content: string;
     switch (type) {
       case 'hse':
-        content = await generateHSE(userId, docType || 'risk', details, templateId);
+        content = await generateHSE(userId, docType || 'risk', details);
         break;
       case 'document':
         content = await generateDocument(userId, details.type || 'hse', details);
-        break;
-      case 'ats':
-        content = await atsCheck(userId, details.resumeText, jobDesc);
         break;
       default:
         return NextResponse.json({ error: 'Invalid or unsupported type' }, { status: 400 });
@@ -34,18 +40,17 @@ export async function POST(request: NextRequest) {
     const doc = await prisma.document.create({
       data: {
         userId,
-        templateId: templateId || '',
+        templateId: templateId ? templateId : undefined,
         type,
         title: details.title || `${type} Document`,
         content: { raw: content, parsed: {} } as any,
       }
     });
 
+console.log('DONE AI GEN');
     return NextResponse.json({ success: true, content, documentId: doc.id });
   } catch (error: any) {
-    console.error('[AI Route] Error:', error);
-    return NextResponse.json({ error: error.message || 'AI generation failed' }, { status: 400 });
+    console.log('ERROR AI GEN');
+    return NextResponse.json({ success: false, message: error.message || 'Internal server error' }, { status: 500 });
   }
 }
-
-

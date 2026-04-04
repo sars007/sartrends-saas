@@ -2,19 +2,13 @@ import { auth } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { CreditCard, FileText, MessageCircle, Truck, Download, Star } from 'lucide-react'
+import { CreditCard, FileText, MessageCircle, Truck, Download, Star, Users, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { getUserCredits } from '@/lib/credits'
-
-async function getSession() {
-  const cookieStore = cookies()
-  const sessionCookie = cookieStore.get(auth.sessionCookieName)
-  if (!sessionCookie) return null
-  return await auth.getSession(sessionCookie.value)
-}
+import { getSession } from '@/lib/session'
 
 export default async function Dashboard() {
-  const session = await getSession()
+  const session = await getSession(cookies())
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
@@ -80,8 +74,23 @@ export default async function Dashboard() {
                   <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">Resume Builder</h3>
                   <p className="text-gray-600 text-sm text-center">AI Resume & Cover Letter</p>
                 </Link>
-                <Link href="/modules/ai" className="group p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-100 border hover:shadow-xl transition-all hover:-translate-y-1">
-                  <Star className="h-12 w-12 text-emerald-600 mx-auto mb-4 group-hover:scale-110 transition" />
+<Link href="/modules/ai/seo" className="group p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 border hover:shadow-xl transition-all hover:-translate-y-1">
+                  <Search className="h-12 w-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition" />
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">AI SEO</h3>
+                  <p className="text-gray-600 text-sm text-center">Content optimization</p>
+                </Link>
+                <Link href="/modules/ai/marketing" className="group p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-100 border hover:shadow-xl transition-all hover:-translate-y-1">
+                  <TrendingUp className="h-12 w-12 text-emerald-600 mx-auto mb-4 group-hover:scale-110 transition" />
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">AI Marketing</h3>
+                  <p className="text-gray-600 text-sm text-center">Ad & social copy</p>
+                </Link>
+                <Link href="/modules/ai/sales" className="group p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-red-100 border hover:shadow-xl transition-all hover:-translate-y-1">
+                  <DollarSign className="h-12 w-12 text-orange-600 mx-auto mb-4 group-hover:scale-110 transition" />
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">AI Sales</h3>
+                  <p className="text-gray-600 text-sm text-center">Sales pages & emails</p>
+                </Link>
+                <Link href="/modules/ai" className="group p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-100 border hover:shadow-xl transition-all hover:-translate-y-1">
+                  <MessageCircle className="h-12 w-12 text-purple-600 mx-auto mb-4 group-hover:scale-110 transition" />
                   <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">AI Chat</h3>
                   <p className="text-gray-600 text-sm text-center">Ask anything</p>
                 </Link>
@@ -90,6 +99,7 @@ export default async function Dashboard() {
                   <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">Documents</h3>
                   <p className="text-gray-600 text-sm text-center">HSE & Office Docs</p>
                 </Link>
+
                 <Link href="/modules/orders" className="group p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-red-100 border hover:shadow-xl transition-all hover:-translate-y-1">
                   <Users className="h-12 w-12 text-orange-600 mx-auto mb-4 group-hover:scale-110 transition" />
                   <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">My Orders</h3>
@@ -206,4 +216,3 @@ export default async function Dashboard() {
     </div>
   )
 }
-

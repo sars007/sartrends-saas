@@ -7,6 +7,7 @@ import { Menu } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { isPR, getPRNumber } from '@/lib/env'
+import { getSession } from '@/lib/session'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,19 +16,12 @@ export const metadata: Metadata = {
   description: 'All-in-one AI tools, services marketplace, dispatch system',
 }
 
-async function getSession() {
-  const cookieStore = cookies()
-  const sessionCookie = cookieStore.get(auth.sessionCookieName)
-  if (!sessionCookie) return null
-  return await auth.getSession(sessionCookie.value)
-}
-
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await getSession()
+  const session = await getSession(cookies())
   const prNumber = getPRNumber();
 
   return (
@@ -103,4 +97,3 @@ export default async function RootLayout({
     </html>
   )
 }
-

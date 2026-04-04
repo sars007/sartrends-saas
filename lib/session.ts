@@ -1,18 +1,17 @@
 import { auth } from './auth'
 import type { cookies } from 'next/headers'
+import type { Session } from 'lucia'
 
-export async function getSession(cookies: ReturnType<typeof cookies>) {
-  const sessionId = cookies().get(auth.sessionCookieName)?.value
+export async function getSession(cookieStore: ReturnType<typeof cookies>): Promise<Session | null> {
+  const sessionId = cookieStore.get(auth.sessionCookieName)?.value
   if (!sessionId) return null
 
-  const session = await auth.getSessionById(sessionId)
-  if (!session) {
-    cookies().delete(auth.sessionCookieName, {
-      path: '/',
-    })
-    return null
+  const result = await auth.validateSession(sessionId)
+  switch (result.type) {
+    case 'valid':
+      return result.session
+    default:
+      cookieStore.delete(auth.sessionCookieName, { path: '/' })
+      return null
   }
-
-  return session
 }
-

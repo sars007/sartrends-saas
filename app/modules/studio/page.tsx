@@ -25,14 +25,24 @@ export default function Studio() {
   const [selectedTool, setSelectedTool] = useState(tools[0]);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [results, setResults] = useState<GeneratedItem[]>([]);
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {
+      setError('Please enter a prompt');
+      return;
+    }
     setLoading(true);
+    setError('');
 
     // Simulate generation
     setTimeout(() => {
+      if (Math.random() < 0.1) { // 10% error chance for testing
+        setError('Generation failed. Please try again.');
+        setLoading(false);
+        return;
+      }
       const newItem: GeneratedItem = {
         id: Date.now().toString(),
         type: 'text',
@@ -99,6 +109,26 @@ export default function Studio() {
                 disabled={loading}
               />
 
+              {error && (
+                <Card variant="destructive" className="p-4 mt-4 mb-4">
+                  <CardContent className="p-0 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin mt-0.5 text-red-500 flex-shrink-0" />
+                      <p>{error}</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setError('')
+                      }}
+                      className="w-full"
+                    >
+                      Clear & Retry
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
               <div className="flex justify-end">
                 <Button
                   onClick={handleGenerate}

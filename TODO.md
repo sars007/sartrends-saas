@@ -1,40 +1,17 @@
-# Sartrends AI SaaS - Remaining Steps (Post-HSE Completion)
+# Project Stabilization TODO
+## Approved Plan - Progress Tracking
 
-## Current Status
-- ✅ Prisma DB setup & seed
-- ✅ Auth (login/register/middleware)
-- ✅ AI endpoints (resume/cover/ATS/chat) stabilized
-- ✅ UI Modules (resume/studio/documents/orders/subscriptions)
-- ✅ Exports (PDF/Word)
-- ✅ Payments webhooks (Lemon Squeezy)
-- ✅ HSE SaaS page live
+**Legend:** ⛔ Pending | 🔄 Running | ✅ Complete | ❌ Failed
 
-## TODO Steps
-### 1. Testing (Priority 1)
-- [x] Run `npm run db:push && npm run db:seed` (skipped - assume complete, seed templates ready)
-- [x] Dev server started (`npm run dev` - localhost:3000)
-- [ ] Test AI via `npx tsx test-stability.ts`
-- [ ] Manual: Auth -> Dashboard -> Generate/Export
-- [ ] Payments flow
-- [ ] Edge cases
+1. [⛔] Fix package.json: Correct swiper versions (^11.0.2)
+2. [⛔] Create sartrends-saas/components/ui/select.tsx
+3. [⛔] Create sartrends-saas/components/ui/switch.tsx  
+4. [⛔] cd sartrends-saas &amp;&amp; npm install
+5. [⛔] cd sartrends-saas &amp;&amp; npx prisma generate &amp;&amp; npx prisma db push &amp;&amp; node prisma/seed-flags.ts
+6. [⛔] Update .gitignore: Add .next/, node_modules/
+7. [⛔] cd sartrends-saas &amp;&amp; git add . &amp;&amp; git commit -m "Stabilization fixes: UI components, deps, seed DB" &amp;&amp; git push origin blackboxai/production-fixes
+8. [⛔] Final: cd sartrends-saas &amp;&amp; npm run build (zero errors)
 
-### 2. UI/Polish
-- [ ] Add loading/error states to all modules
-- [ ] Admin dashboard polish (/admin/payments)
-- [ ] Mobile responsiveness check
-- [ ] SEO: Meta tags for HSE/resume pages
+**Status Updates Here After Each Step**
 
-### 3. Empire Expansion (TODO-EMPIRE.md)
-- [ ] Analytics (PostHog/GA)
-- [ ] Marketing pages (/contact, /pricing)
-- [ ] Multi-tenant/org support
-- [ ] Advanced features (ATS bulk, templates marketplace)
-
-### 4. Deploy
-- [ ] Env vars for Vercel (DB_URL, LEMON_KEY, AI keys)
-- [ ] `vercel --prod`
-- [ ] Custom domain if needed
-
-## Next Command
-`cd sartrends-saas && npm install && npm run dev`
-
+**Final Goal:** Zero build errors, production stable.

@@ -2,6 +2,9 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Star, FileText, MessageCircle, Truck, Shield, ArrowRight, Check, Lock, Users } from 'lucide-react'
+import { ServicesSlider } from '@/app/components/services-slider'
+
+
 
 export const metadata: Metadata = {
   title: 'Sartrends AI - Build Your Career & Business with AI',
@@ -87,8 +90,11 @@ export default function Home() {
         </div>
       </section>
 
+      <ServicesSlider />
+
       {/* How It Works */}
       <section className="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
+
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">How it works</h2>

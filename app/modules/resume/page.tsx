@@ -40,11 +40,12 @@ type ResumeForm = z.infer<typeof resumeSchema>
 type TabType = 'builder' | 'cover-letter' | 'ats-check'
 
 export default function ResumeBuilder() {
-  const [activeTab, setActiveTab] = useState<TabType>('builder')
+const [activeTab, setActiveTab] = useState<TabType>('builder')
   const [generatedResume, setGeneratedResume] = useState('')
   const [generatedCoverLetter, setGeneratedCoverLetter] = useState('')
   const [atsResult, setAtsResult] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState('')
   const [preview, setPreview] = useState(false)
   const [templates, setTemplates] = useState([])
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
@@ -96,37 +97,52 @@ export default function ResumeBuilder() {
 
   const onSubmit = form.handleSubmit(async (data) => {
     setIsGenerating(true)
+    setError('')
     try {
       const response = await fetch('/api/ai/resume', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ details: data, templateId: selectedTemplateId }) })
-      if (!response.ok) throw new Error('Generation failed')
+      if (!response.ok) throw new Error(await response.text())
       const { resume } = await response.json()
       setGeneratedResume(resume)
       setPreview(true)
-    } catch (error) { alert('Error generating resume: ' + error) }
+    } catch (error: any) { 
+      setError('Error generating resume: ' + error.message) 
+    }
     finally { setIsGenerating(false) }
   })
 
   const handleCoverLetter = async () => {
-    if (!coverLetterData.name || !coverLetterData.position) { alert('Please fill in required fields'); return }
+    if (!coverLetterData.name || !coverLetterData.position) { 
+      setError('Please fill in required fields'); 
+      return 
+    }
     setIsGenerating(true)
+    setError('')
     try {
       const response = await fetch('/api/ai/cover-letter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ details: coverLetterData }) })
-      if (!response.ok) throw new Error('Generation failed')
+      if (!response.ok) throw new Error(await response.text())
       const { coverLetter } = await response.json()
       setGeneratedCoverLetter(coverLetter)
-    } catch (error) { alert('Error generating cover letter: ' + error) }
+    } catch (error: any) { 
+      setError('Error generating cover letter: ' + error.message) 
+    }
     finally { setIsGenerating(false) }
   }
 
   const handleAtsCheck = async () => {
-    if (!atsData.resumeText || !atsData.jobDesc) { alert('Please provide both resume and job description'); return }
+    if (!atsData.resumeText || !atsData.jobDesc) { 
+      setError('Please provide both resume and job description'); 
+      return 
+    }
     setIsGenerating(true)
+    setError('')
     try {
       const response = await fetch('/api/ai/ats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(atsData) })
-      if (!response.ok) throw new Error('ATS check failed')
+      if (!response.ok) throw new Error(await response.text())
       const { result } = await response.json()
       setAtsResult(result)
-    } catch (error) { alert('Error running ATS check: ' + error) }
+    } catch (error: any) { 
+      setError('Error running ATS check: ' + error.message) 
+    }
     finally { setIsGenerating(false) }
   }
 
@@ -144,7 +160,7 @@ export default function ResumeBuilder() {
     })
   }
 
-  const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); alert('Copied!') }
+  const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); /* alert('Copied!') */ }
 
   const tabs = [{ id: 'builder', label: 'Resume Builder', icon: FileText }, { id: 'cover-letter', label: 'Cover Letter', icon: Star }, { id: 'ats-check', label: 'ATS Check', icon: CheckCircle }] as const
 
@@ -152,6 +168,26 @@ export default function ResumeBuilder() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-8"><h1 className="text-3xl font-bold text-gray-900 mb-2">Resume & Career Tools</h1><p className="text-gray-600">Build professional resumes, cover letters, and check ATS compatibility</p></div>
+        {error && (
+          <Card variant="destructive" className="p-4 mb-6">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex items-start gap-2">
+                <Loader2 className="h-4 w-4 animate-spin mt-0.5 text-red-500 flex-shrink-0" />
+                <p>{error}</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setError('')
+                }}
+                className="w-full"
+              >
+                Clear Error
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {tabs.map((tab) => (<Button key={tab.id} variant={activeTab === tab.id ? 'default' : 'outline'} onClick={() => setActiveTab(tab.id)} className={cn('gap-2 whitespace-nowrap', activeTab === tab.id && 'bg-gradient-to-r from-blue-600 to-purple-600')}><tab.icon className="h-4 w-4" />{tab.label}</Button>))}
         </div>

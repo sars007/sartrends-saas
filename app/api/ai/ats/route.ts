@@ -4,6 +4,7 @@ import { getSession } from '@/lib/session';
 import { atsCheck } from '@/lib/ai-fixed';
 
 export async function POST(req: NextRequest) {
+console.log('START AI GEN');
   try {
     const cookieStore = cookies();
     const session = await getSession(cookieStore);
@@ -18,10 +19,10 @@ export async function POST(req: NextRequest) {
 
     const atsResult = await atsCheck(session.user.id, resumeText, jobDesc);
     
+console.log('DONE AI GEN');
     return NextResponse.json({ result: atsResult });
   } catch (error: any) {
-    console.error('ATS Check API error:', error);
-    return NextResponse.json({ error: error.message || 'Internal error' }, { status: 500 });
+    console.log('ERROR AI GEN');
+    return NextResponse.json({ success: false, message: error.message || 'Internal server error' }, { status: 500 });
   }
 }
-

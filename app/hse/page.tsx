@@ -45,10 +45,12 @@ export default function HSEGenerator() {
     init()
   }, [])
 
-  const [content, setContent] = useState('')
+const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [templates, setTemplates] = useState<any[]>([])
   const previewRef = useRef<HTMLDivElement>(null)
+
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -63,19 +65,21 @@ useEffect(() => {
 
 const onSubmit = async (data: FormData) => {
     if (lowCredits) {
-      alert('Low credits. Upgrade to premium or earn more.')
+      setError('Low credits. Upgrade to premium or earn more.')
       return
     }
     setLoading(true)
+    setError('')
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
         body: JSON.stringify({ type: 'hse', docType, details: data, templateId: data.templateId }),
       })
+      if (!res.ok) throw new Error(await res.text())
       const { content } = await res.json()
       setContent(content)
-    } catch (e) {
-      alert('Generation failed: ' + e)
+    } catch (e: any) {
+      setError('Generation failed: ' + e.message)
     }
     setLoading(false)
   }
@@ -110,6 +114,28 @@ const onSubmit = async (data: FormData) => {
               <Card variant="destructive" className="p-4">
                 <CardContent className="p-0">
                   <div>Low credits. <a href="/upgrade" className="text-blue-600 underline">Upgrade</a> for unlimited access.</div>
+                </CardContent>
+              </Card>
+            )}
+            {error && (
+              <Card variant="destructive" className="p-4 mt-4">
+                <CardContent className="p-0 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin mt-0.5 text-red-500 flex-shrink-0" />
+                    <p>{error}</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setError('')
+                      form.reset()
+                      setContent('')
+                    }}
+                    className="w-full"
+                  >
+                    Clear & Retry
+                  </Button>
                 </CardContent>
               </Card>
             )}
