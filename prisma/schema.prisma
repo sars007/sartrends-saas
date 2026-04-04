@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  credits   Int      @default(10)
+  isPaid    Boolean  @default(false)
+  plan      String   @default("free")
+  createdAt DateTime  @default(now())
+  Account   Account[]
+  sessions  Session[]
+
+  subscriptions        Subscription[]
+  creditTransactions   CreditTransaction[]
+  documents            Document[]
+  orders               Order[]
+  dispatchLoads        DispatchLoad[]
+  reviews              Review[]
+
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  expiresAt    DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          String
+  status        String   @default("pending") // pending, verified, active, rejected
+  screenshotUrl String?
+  paymentMethod String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+model CreditTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  type      String // earn, deduct
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@map("credit_transactions")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template    Template @relation(fields: [templateId], references: [id])
+  templateId  String
+  type        String   // resume, cover, hse, office
+  title       String
+  content     Json     // editable markdown/JSON
+  pdfUrl      String?
+  createdAt   DateTime @default(now())
+
+  @@map("documents")
+}
+
+model Template {
+  id        String    @id @default(cuid())
+  name      String
+  type      String    // resume, cover, hse
+  content   String    // prompt template
+  isPremium Boolean   @default(false)
+  createdAt DateTime @default(now())
+  documents Document[]
+
+  @@unique([name, type])
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  tiers       Json      // pricing tiers array
+  createdAt   DateTime  @default(now())
+  orders      Order[]
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  userId      String
+  serviceId   String?
+  service     Service? @relation(fields: [serviceId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  budget      Float?
+  status      String   @default("open") // open, in-progress, completed, cancelled
+  messages    Json[]   // [{role: 'user/ai', content}]
+  files       String[] // uploaded file URLs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("orders")
+}
+
+model DispatchLoad {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  origin        String
+  destination   String
+  weight        Float
+  brokerContact String?
+  status        String   @default("pending") // pending, booked, completed
+  earningsEst   Float?
+  docs          Json     // {mcNumber: '..', dot: '..', etc}
+  createdAt     DateTime @default(now())
+
+  @@map("dispatch_loads")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  orderId   String?
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+}
+

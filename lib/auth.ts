@@ -1,0 +1,27 @@
+﻿import { Lucia } from "lucia";
+import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
+import { prisma } from "./db";
+
+export const auth = new Lucia(new PrismaAdapter(prisma.session, prisma), {
+  sessionCookie: {
+    attributes: {
+      secure: process.env.NODE_ENV === "production",
+    },
+  },
+});
+
+declare module "lucia" {
+  interface Register {
+    Lucia: typeof auth;
+    DatabaseUserAttributes: {
+      id: string;
+      email: string;
+      name: string | null;
+      credits: number;
+      isPaid: boolean;
+      plan: string;
+    };
+  }
+}
+
+export type { Session, User } from "lucia";

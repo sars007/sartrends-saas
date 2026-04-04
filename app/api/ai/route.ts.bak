@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/session';
+import { generateResume, generateCoverLetter, generateDocument, generateHSE, atsCheck, chatStream } from '@/lib/ai';
+import { getUserCredits, hasSufficientCredits } from '@/lib/credits';
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getSession(cookies())
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userId = session.user.id;
+
+    const { type, details, jobDesc } = await request.json();
+
+    switch (type) {
+      case 'resume':
+        if (!await hasSufficientCredits(userId, 5)) throw new Error('Insufficient credits');
+        const resume = await generateResume(userId, details);
+        return NextResponse.json({ content: resume });
+      case 'coverLetter':
+        if (!await hasSufficientCredits(userId, 5)) throw new Error('Insufficient credits');
+        const cover = await generateCoverLetter(userId, details);
+        return NextResponse.json({ content: cover });
+      case 'document':
+        if (!await hasSufficientCredits(userId, 5)) throw new Error('Insufficient credits');
+        const doc = await generateDocument(userId, details.type, details);
+        return NextResponse.json({ content: doc });
+      case 'hse':
+        if (!await hasSufficientCredits(userId, 5)) throw new Error('Insufficient credits');
+        const hse = await generateHSE(userId, details.docType, details);
+        return NextResponse.json({ content: hse });
+      case 'ats':
+        if (!await hasSufficientCredits(userId, 5)) throw new Error('Insufficient credits');
+        const analysis = await atsCheck(userId, details.resumeText, jobDesc);
+        return NextResponse.json({ content: analysis });
+      default:
+        return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    }
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'AI generation failed' }, { status: 400 });
+  }
+}
+
