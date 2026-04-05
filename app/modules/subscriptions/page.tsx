@@ -30,6 +30,8 @@ const premiumFeatures = [
   'Early access to new features',
 ];
 
+export const dynamic = 'force-dynamic'
+
 export default async function Subscriptions() {
   const session = await getCurrentUser();
   const user = session?.user;

@@ -1,4 +1,6 @@
-﻿'use client';
+﻿export const dynamic = 'force-dynamic'
+
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { Star, Send, Copy, Check, Loader2, AlertCircle, Trash2, MessageCircle, FileText, Briefcase, Shield } from 'lucide-react';
