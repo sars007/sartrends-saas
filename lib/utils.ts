@@ -31,3 +31,4 @@ export function truncatePrompt(prompt: string, maxLength: number = 2000): string
   if (prompt.length <= maxLength) return prompt;
   return prompt.substring(0, maxLength).trim() + '... [truncated]';
 }
+

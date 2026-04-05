@@ -33,3 +33,4 @@ declare module 'lucide-react' {
   export const Truck: any;
   export const Users: any;
 }
+

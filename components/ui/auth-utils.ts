@@ -11,3 +11,4 @@ export async function getClientSession() {
   }
   return { user: { id: localStorage.getItem('userId') || '' } as any };
 }
+

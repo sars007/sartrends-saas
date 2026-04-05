@@ -115,3 +115,4 @@ export async function* chatStream(userId: string, messages: Array<{role: 'user' 
   }
   console.log('DONE AI CHAT STREAM');
 }
+

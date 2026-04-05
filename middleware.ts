@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
   const sessionId = request.cookies.get('auth_session')?.value ?? null;
@@ -24,4 +24,5 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/modules/:path*', '/dashboard/:path*', '/admin/:path*']
 }
+
 

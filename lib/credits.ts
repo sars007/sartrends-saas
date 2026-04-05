@@ -1,5 +1,5 @@
 import { prisma } from './db';
-import type { User } from '@prisma/client';
+import type { User } from '@/lib/prisma';
 
 export async function getUserCredits(userId: string): Promise<number> {
   const user = await prisma.user.findUnique({
@@ -93,3 +93,4 @@ export async function addCredits(userId: string, amount: number, reason: string)
 export async function getUserById(id: string): Promise<User | null> {
   return prisma.user.findUnique({ where: { id } });
 }
+

@@ -1,4 +1,4 @@
-﻿import { Lucia } from "lucia";
+import { Lucia } from "lucia";
 // import { PrismaAdapter } from "@lucia-auth/adapter-prisma"; // missing dep, use dev adapter or mock
 import { prisma } from "./db";
 
@@ -28,3 +28,4 @@ declare module "lucia" {
 }
 
 export type { Session, User } from "lucia";
+

@@ -12,3 +12,4 @@ export function getPRNumber(): number | null {
 export function isPR(): boolean {
   return isPreview() || !!getPRNumber();
 }
+

@@ -1,4 +1,4 @@
-﻿import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss"
 
 const config = {
   content: [
@@ -57,3 +57,4 @@ const config = {
 } satisfies Config
 
 export default config
+

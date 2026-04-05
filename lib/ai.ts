@@ -72,3 +72,4 @@ export async function generateDocument(userId: string, type: string, details: an
   if (!await prisma.user.findFirst({ where: { id: userId, isPaid: true } })) await deductCredits(userId, 5, 'doc gen')
   return generateAI(prompt)
 }
+

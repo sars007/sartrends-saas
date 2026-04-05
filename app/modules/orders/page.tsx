@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { Truck, Package, MapPin, Clock, DollarSign, ArrowRight, Check, Star, Phone, Loader2, Filter, Upload, X } from 'lucide-react';
@@ -123,7 +123,7 @@ export default function Orders() {
                   <div className="text-center py-8"><div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><Check className="h-8 w-8 text-green-600" /></div><h3 className="text-lg font-semibold text-gray-900 mb-2">Proof Uploaded!</h3><p className="text-gray-600">Your delivery proof has been submitted successfully.</p></div>
                 ) : (
                   <>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2"><p className="text-sm font-medium text-gray-700">Load Details</p><p className="text-sm text-gray-600">{selectedLoad.origin} → {selectedLoad.destination}</p><p className="text-sm text-gray-600">{selectedLoad.weight} • {selectedLoad.rate}</p></div>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2"><p className="text-sm font-medium text-gray-700">Load Details</p><p className="text-sm text-gray-600">{selectedLoad.origin} ? {selectedLoad.destination}</p><p className="text-sm text-gray-600">{selectedLoad.weight} � {selectedLoad.rate}</p></div>
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
                       {proofPreview ? (<div className="relative"><img src={proofPreview} alt="Proof preview" className="max-h-48 mx-auto rounded-lg" /><Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => { setProofFile(null); setProofPreview(null) }}><X className="h-4 w-4" /></Button></div>) : (<><Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" /><p className="text-gray-600 mb-2">Drop your proof screenshot here</p><p className="text-sm text-gray-400">PNG, JPG up to 10MB</p></>)}
                       <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -142,3 +142,4 @@ export default function Orders() {
     </div>
   );
 }
+

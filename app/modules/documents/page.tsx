@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { FileText, Download, Loader2, Check, AlertCircle, Shield, Building2, Truck, Users, Briefcase } from 'lucide-react';
@@ -256,3 +256,4 @@ export default function Documents() {
     </div>
   );
 }
+

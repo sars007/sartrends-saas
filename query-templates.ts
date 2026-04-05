@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@/lib/prisma'
 const prisma = new PrismaClient()
 async function main() {
   const count = await prisma.template.count()
@@ -12,3 +12,4 @@ main()
     process.exit(1)
   })
   .finally(() => prisma.$disconnect())
+

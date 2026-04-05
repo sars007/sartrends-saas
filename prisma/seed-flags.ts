@@ -1,5 +1,5 @@
 import { prisma } from '../lib/db';
-import { FeatureFlags } from '@prisma/client';
+import { FeatureFlags } from '@/lib/prisma';
 
 async function seedFeatureFlags() {
   const flags: Array<{key: string, value: boolean}> = [
@@ -39,4 +39,5 @@ seedFeatureFlags().then(() => {
   console.log('Feature flags seeded');
   process.exit(0);
 }).catch(console.error);
+
 

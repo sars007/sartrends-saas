@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@/lib/prisma'
 
 const prisma = new PrismaClient()
 
@@ -161,3 +161,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect()
   })
+

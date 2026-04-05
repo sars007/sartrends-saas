@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { Star, Send, Copy, Check, Loader2, AlertCircle, Trash2, MessageCircle, FileText, Briefcase, Shield } from 'lucide-react';
@@ -103,7 +103,7 @@ export default function AIChat() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">AI Assistant</h1>
-              <p className="text-gray-600">Powered by local Ollama • llama3</p>
+              <p className="text-gray-600">Powered by local Ollama � llama3</p>
             </div>
           </div>
           {messages.length > 0 && (
@@ -260,3 +260,4 @@ export default function AIChat() {
     </div>
   );
 }
+
