@@ -1,1 +1,11 @@
-# Sartrends SaaS - EMPIRE Expansion Roadmap&#10;&#10;## Phase 1: Core SaaS Polish (Current)&#10;- ✅ Stabilization, UI polish&#10;- ✅ Payments table/sort&#10;&#10;## Phase 2: Monetization&#10;- Stripe integration (replace EasyPaisa)&#10;- Recurring subscriptions&#10;- Usage analytics dashboard&#10;&#10;## Phase 3: Empire Features&#10;- Multi-tenant (white-label)&#10;- AI Agent marketplace&#10;- Mobile app (React Native)&#10;- Enterprise tier ($99/mo)&#10;&#10;## Phase 4: Growth&#10;- Marketing automation (SEO, sales copy gen)&#10;- Affiliate program&#10;- Partnerships (job boards)&#10;&#10;**Timeline:** Q4 2024 launch Empire tier.&#10;
+'use client'
+import React from 'react'
+
+export default function PaymentsPage() {
+  return (
+    <div style={{padding: 20}}>
+      <h1>Payments</h1>
+      <p>Payments module working</p>
+    </div>
+  )
+}
