@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/lib/prisma'
+﻿import { PrismaClient } from '@/lib/prisma'
 const prisma = new PrismaClient()
 async function main() {
   const count = await prisma.template.count()

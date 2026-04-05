@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay, Pagination } from 'swiper/modules';

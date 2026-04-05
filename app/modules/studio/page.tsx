@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Star, Image, Palette, Type, Layout, Loader2, Download, Copy, RefreshCw, Wand2 } from 'lucide-react';

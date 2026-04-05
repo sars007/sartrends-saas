@@ -1,4 +1,4 @@
-export function isPreview() {
+﻿export function isPreview() {
   return process.env.VERCEL_ENV === 'preview';
 }
 

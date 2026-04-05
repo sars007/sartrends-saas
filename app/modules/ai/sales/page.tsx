@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ export default function AISalesCopyGenerator() {
         {/* Header */}
         <div className="text-center">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 mb-4">
-            ← Back to Dashboard
+            â† Back to Dashboard
           </Link>
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">

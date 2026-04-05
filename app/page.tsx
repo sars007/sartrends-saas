@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+ï»¿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Star, FileText, MessageCircle, Truck, Shield, ArrowRight, Check, Lock, Users } from 'lucide-react'
@@ -241,7 +241,7 @@ export default function Home() {
           </div>
           <div className="mt-8 flex items-center justify-center gap-2 text-blue-200">
             <Lock className="h-4 w-4" />
-            No credit card required • Cancel anytime
+            No credit card required â€¢ Cancel anytime
           </div>
         </div>
       </section>
@@ -256,7 +256,7 @@ export default function Home() {
               </div>
               <span className="text-white font-bold text-lg">Sartrends AI</span>
             </div>
-            <p className="text-sm">© 2024 Sartrends AI. All rights reserved.</p>
+            <p className="text-sm">Â© 2024 Sartrends AI. All rights reserved.</p>
           </div>
         </div>
       </footer>

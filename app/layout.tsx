@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
@@ -91,7 +91,7 @@ export default async function RootLayout({
           className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 w-16 h-16 flex items-center justify-center"
           aria-label="WhatsApp Chat"
         >
-          💬
+          ðŸ’¬
         </a>
       </body>
     </html>

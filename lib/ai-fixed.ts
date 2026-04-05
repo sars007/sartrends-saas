@@ -1,4 +1,4 @@
-import { prisma } from './db'
+﻿import { prisma } from './db'
 import { deductCredits } from './credits'
 import { fetchWithTimeout, truncatePrompt } from './utils'
 

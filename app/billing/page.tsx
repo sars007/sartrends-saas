@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ export default function Billing() {
         {/* Header */}
         <div className="text-center">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4">
-            ← Back to Dashboard
+            â† Back to Dashboard
           </Link>
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -95,11 +95,11 @@ export default function Billing() {
                 Payment Instructions
               </h3>
               <ul className="space-y-2 text-sm text-orange-900">
-                <li>• Transfer to the IBAN above</li>
-                <li>• Reference your email in transfer note</li>
-                <li>• Upload screenshot below</li>
-                <li>• Plan activates within 2 hours after verification</li>
-                <li>• Contact support if not activated</li>
+                <li>â€¢ Transfer to the IBAN above</li>
+                <li>â€¢ Reference your email in transfer note</li>
+                <li>â€¢ Upload screenshot below</li>
+                <li>â€¢ Plan activates within 2 hours after verification</li>
+                <li>â€¢ Contact support if not activated</li>
               </ul>
             </div>
           </CardContent>

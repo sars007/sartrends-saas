@@ -1,4 +1,4 @@
-import { generateAI } from './lib/ai';
+﻿import { generateAI } from './lib/ai';
 
 // Test script to verify API endpoints
 async function testEndpoint(url: string, body: any, expectStream = false) {

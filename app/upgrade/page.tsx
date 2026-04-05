@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -65,10 +65,10 @@ export default function UpgradePage() {
               <h2 className="text-2xl font-bold mb-2">Unlimited HSE Generation</h2>
               <p className="text-lg text-gray-600 mb-4">Rs. 999/month</p>
               <ul className="text-left max-w-md mx-auto space-y-2 text-sm">
-                <li>✓ No credits needed</li>
-                <li>✓ Watermark-free exports</li>
-                <li>✓ All templates unlocked</li>
-                <li>✓ Priority support</li>
+                <li>âœ“ No credits needed</li>
+                <li>âœ“ Watermark-free exports</li>
+                <li>âœ“ All templates unlocked</li>
+                <li>âœ“ Priority support</li>
               </ul>
             </div>
             <div>

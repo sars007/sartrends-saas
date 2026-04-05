@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+﻿import OpenAI from 'openai'
 import { prisma } from './db'
 import { deductCredits, getUserCredits } from './credits'
 import { truncatePrompt } from './utils'

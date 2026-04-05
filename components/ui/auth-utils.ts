@@ -1,4 +1,4 @@
-// Client side session - improved with cookie check
+﻿// Client side session - improved with cookie check
 export async function getClientSession() {
   if (typeof document !== 'undefined') {
     const sessionCookie = document.cookie
