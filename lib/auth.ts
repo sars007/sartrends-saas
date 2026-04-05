@@ -1,5 +1,5 @@
 ﻿import { Lucia } from "lucia";
-import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
+// import { PrismaAdapter } from "@lucia-auth/adapter-prisma"; // missing dep, use dev adapter or mock
 import { prisma } from "./db";
 
 export const auth = new Lucia(new PrismaAdapter(prisma.user, prisma.session), {

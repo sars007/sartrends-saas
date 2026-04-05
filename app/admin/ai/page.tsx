@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SelectItem } from "@/components/ui/select-item"
 import { Brain, Languages, Bot } from "lucide-react"
+import { Bullhorn } from "lucide-react"
 
 interface AIConfig {
   id: string
