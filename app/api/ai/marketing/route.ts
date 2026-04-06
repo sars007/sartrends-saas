@@ -1,10 +1,9 @@
 ﻿export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const prompt = body?.prompt || "Sample Product";
+    const { prompt } = await req.json();
 
     return new Response(JSON.stringify({
-      result: generateFallback(prompt)
+      result: generateFallback(prompt || "Sample Product")
     }), {
       headers: { "Content-Type": "application/json" }
     });
