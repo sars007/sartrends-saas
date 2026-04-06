@@ -14,6 +14,7 @@
     }), { status: 200 });
   }
 }
+
 function generateFallback(prompt: string) {
   return `🔥 Marketing Copy
 
@@ -24,6 +25,4 @@ Product: ${prompt}
 ✔ Trusted by customers
 
 👉 Order now before stock runs out!`;
-}
-👉 Order now before stock runs out!;
 }
