@@ -1,11 +1,8 @@
-'use client'
-import React from 'react'
-
-export default function DashboardPage() {
+﻿export default function Page() {
   return (
-    <div style={{padding: 20}}>
+    <main style={{ padding: 20 }}>
       <h1>Dashboard</h1>
-      <p>Dashboard working</p>
-    </div>
+      <p>Welcome to your dashboard</p>
+    </main>
   )
 }
