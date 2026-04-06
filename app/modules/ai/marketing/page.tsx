@@ -1,11 +1,11 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Copy, Check, Sparkles, TrendingUp, Bullhorn } from 'lucide-react';
+import { Loader2, Copy, Check, Sparkles, TrendingUp, Megaphone } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AIMarketingGenerator() {
@@ -57,11 +57,11 @@ export default function AIMarketingGenerator() {
         {/* Header */}
         <div className="text-center">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-4">
-            â† Back to Dashboard
+            ← Back to Dashboard
           </Link>
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Bullhorn className="h-8 w-8 text-white" />
+              <Megaphone className="h-8 w-8 text-white" />
             </div>
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Marketing Generator</h1>
