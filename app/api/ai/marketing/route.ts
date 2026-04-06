@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 🔥 fallback (no error shown to user)
+    // ?? fallback (no error shown to user)
     return NextResponse.json({
       result: generateFallback(prompt)
     });
@@ -44,14 +44,14 @@ export async function POST(req: Request) {
 
 function generateFallback(prompt: string) {
   return 
-🔥 Marketing Copy
+?? Marketing Copy
 
 Product: 
 
-• High-quality product designed for modern users  
-• Boost your lifestyle instantly  
-• Trusted by customers worldwide  
+� High-quality product designed for modern users  
+� Boost your lifestyle instantly  
+� Trusted by customers worldwide  
 
-👉 Try it today and see the difference!
+?? Try it today and see the difference!
 ;
 }
