@@ -14,15 +14,16 @@
     }), { status: 200 });
   }
 }
-
 function generateFallback(prompt: string) {
-  return 🔥 Marketing Copy
+  return `🔥 Marketing Copy
 
-Product: 
+Product: ${prompt}
 
 ✔ High quality
 ✔ Affordable price
 ✔ Trusted by customers
 
+👉 Order now before stock runs out!`;
+}
 👉 Order now before stock runs out!;
 }
