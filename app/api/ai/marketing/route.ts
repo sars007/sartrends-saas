@@ -1,57 +1,28 @@
-import { NextResponse } from 'next/server';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-export async function POST(req: Request) {
-  const { prompt } = await req.json();
-
+ï»¿export async function POST(req: Request) {
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are a marketing expert.' },
-          { role: 'user', content: prompt }
-        ]
-      })
-    });
+    const { prompt } = await req.json();
 
-    const data = await res.json();
-
-    if (res.ok && data.choices) {
-      return NextResponse.json({
-        result: data.choices[0].message.content
-      });
-    }
-
-    // ?? fallback (no error shown to user)
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       result: generateFallback(prompt)
+    }), {
+      headers: { "Content-Type": "application/json" }
     });
 
-  } catch (err) {
-    return NextResponse.json({
-      result: generateFallback(prompt)
-    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: "Something went wrong"
+    }), { status: 500 });
   }
 }
 
 function generateFallback(prompt: string) {
   return 
-?? Marketing Copy
+ðŸ”¥ Marketing Copy
 
 Product: 
 
-• High-quality product designed for modern users  
-• Boost your lifestyle instantly  
-• Trusted by customers worldwide  
+This is a high-quality product designed to solve your problems.
 
-?? Try it today and see the difference!
+ðŸ‘‰ Get yours today!
 ;
 }
