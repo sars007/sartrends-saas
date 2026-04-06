@@ -1,4 +1,5 @@
 ﻿'use client';
+import Link from 'next/link';
 
 export default function Page() {
   return (
@@ -9,6 +10,7 @@ export default function Page() {
         <div style={{ padding: 10, border: '1px solid #ccc', marginBottom: 10 }}>
           <h3>Marketing AI</h3>
           <p>Generate marketing content</p>
+          <Link href="/modules/ai/marketing">Open</Link>
         </div>
 
         <div style={{ padding: 10, border: '1px solid #ccc', marginBottom: 10 }}>
