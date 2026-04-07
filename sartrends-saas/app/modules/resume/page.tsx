@@ -1,175 +1,234 @@
-"use client";
+﻿'use client'
 
-import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Button } from '../../../components/ui/button'
+import { Input } from '../../../components/ui/input'
+import { Textarea } from '../../../components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
+import { Loader2, Download, Bot, FileText, CheckCircle, Copy, Star } from 'lucide-react'
+import { cn } from '../../../lib/utils'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import { getClientSession } from '../../../components/ui/auth-utils'
+
+const resumeSchema = z.object({
+  personal: z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+    phone: z.string(),
+    location: z.string(),
+  }),
+  experience: z.array(z.object({
+    title: z.string(),
+    company: z.string(),
+    dates: z.string(),
+    description: z.string(),
+  })).min(1),
+  education: z.array(z.object({
+    degree: z.string(),
+    school: z.string(),
+    dates: z.string(),
+  })).min(1),
+  skills: z.array(z.string()).min(1),
+})
+
+type ResumeForm = z.infer<typeof resumeSchema>
+type TabType = 'builder' | 'cover-letter' | 'ats-check'
 
 export default function ResumeBuilder() {
-  const [category, setCategory] = useState('professional');
-  const [lang, setLang] = useState<'english' | 'urdu'>('english');
-  const [prompt, setPrompt] = useState('');
-  const [content, setContent] = useState('');
-  const [credits, setCredits] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+const [activeTab, setActiveTab] = useState<TabType>('builder')
+  const [generatedResume, setGeneratedResume] = useState('')
+  const [generatedCoverLetter, setGeneratedCoverLetter] = useState('')
+  const [atsResult, setAtsResult] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState('')
+  const [preview, setPreview] = useState(false)
+  const [templates, setTemplates] = useState([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const previewRef = useRef<HTMLDivElement>(null)
+  const coverLetterRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const [session, setSession] = useState<any>(null)
+  const [isLoadingSession, setIsLoadingSession] = useState(true)
+  const [coverLetterData, setCoverLetterData] = useState({ name: '', position: '', company: '', experience: '', skills: '' })
+  const [atsData, setAtsData] = useState({ resumeText: '', jobDesc: '' })
 
-  const categories = [
-    { id: 'professional', name: 'Professional Resume', desc: 'Corporate/executive roles', promptTemplate: 'Generate a professional resume for a Senior Software Engineer with 8+ years experience. Include sections: Summary, Skills (React, Next.js, Node.js, AI/ML), Experience (3 roles), Education, Certifications. Use ATS-friendly format with quantifiable achievements.' },
-    { id: 'ats', name: 'ATS-Optimized', desc: 'Keyword-optimized for screening', promptTemplate: 'Create an ATS-optimized resume for Software Developer position. Target keywords: React, TypeScript, Next.js, Prisma, TailwindCSS, Stripe integration. Include Summary, Technical Skills, Professional Experience (4 roles with metrics), Projects, Education. Standard headings only.' },
-    { id: 'entry', name: 'Entry-Level', desc: 'Junior/new grad resumes', promptTemplate: 'Write an entry-level resume for a Junior Frontend Developer (recent bootcamp grad). Highlight: React projects, freelance work, bootcamp certification, transferable skills from retail/customer service. Sections: Objective, Education, Projects, Skills, Experience.' },
-    { id: 'tech', name: 'Tech Startup', desc: 'Modern startup roles', promptTemplate: 'Generate a tech startup resume for Full Stack Developer. Emphasize: Rapid prototyping, AI tools (Ollama), modern stack (Next.js 14+, Tailwind v4, Lucia auth), side projects, GitHub contributions. Creative format with metrics and impact.' },
-    { id: 'custom', name: 'Custom Resume', desc: 'Your specific needs', promptTemplate: '' },
-  ];
-
-  const generateResume = async () => {
-    if (!prompt && !categories.find(c => c.id === category)?.promptTemplate) return;
-
-    setIsLoading(true);
-    try {
-      const fullPrompt = categories.find(c => c.id === category)?.promptTemplate || prompt;
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: fullPrompt, lang }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setContent(data.error || 'Error generating resume.');
-        return;
-      }
-      setContent(data.response);
-      setCredits(data.credits);
-    } catch (error) {
-      setContent('Error: Ensure OLLAMA running and you have credits.');
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    const checkSession = async () => {
+      const s = await getClientSession()
+      setSession(s)
+      setIsLoadingSession(false)
+      if (!s?.user?.id) router.push('/login')
     }
-  };
+    checkSession()
+  }, [router])
 
-  const downloadResume = () => {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `resume-${category}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  useEffect(() => {
+    fetch('/api/templates')
+      .then(res => res.json())
+      .then(data => {
+        const resumeTemplates = data.templates?.filter((t: any) => t.type === 'resume') || []
+        setTemplates(resumeTemplates)
+        if (resumeTemplates.length > 0) setSelectedTemplateId(resumeTemplates[0].id)
+      })
+      .catch(console.error)
+  }, [])
+
+  if (isLoadingSession) return (<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>)
+  if (!session?.user?.id) return null
+
+  const form = useForm<ResumeForm>({
+    resolver: zodResolver(resumeSchema),
+    defaultValues: {
+      personal: { name: '', email: '', phone: '', location: '' },
+      experience: [{ title: '', company: '', dates: '', description: '' }],
+      education: [{ degree: '', school: '', dates: '' }],
+      skills: [''],
+    },
+  })
+
+  const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: 'experience' })
+  const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: 'education' })
+  const { fields: skillFields, append: appendSkill, remove: removeSkill } = useFieldArray({ control: form.control, name: 'skills' })
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    setIsGenerating(true)
+    setError('')
+    try {
+      const response = await fetch('/api/ai/resume', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ details: data, templateId: selectedTemplateId }) })
+      if (!response.ok) throw new Error(await response.text())
+      const { resume } = await response.json()
+      setGeneratedResume(resume)
+      setPreview(true)
+    } catch (error: any) { 
+      setError('Error generating resume: ' + error.message) 
+    }
+    finally { setIsGenerating(false) }
+  })
+
+  const handleCoverLetter = async () => {
+    if (!coverLetterData.name || !coverLetterData.position) { 
+      setError('Please fill in required fields'); 
+      return 
+    }
+    setIsGenerating(true)
+    setError('')
+    try {
+      const response = await fetch('/api/ai/cover-letter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ details: coverLetterData }) })
+      if (!response.ok) throw new Error(await response.text())
+      const { coverLetter } = await response.json()
+      setGeneratedCoverLetter(coverLetter)
+    } catch (error: any) { 
+      setError('Error generating cover letter: ' + error.message) 
+    }
+    finally { setIsGenerating(false) }
+  }
+
+  const handleAtsCheck = async () => {
+    if (!atsData.resumeText || !atsData.jobDesc) { 
+      setError('Please provide both resume and job description'); 
+      return 
+    }
+    setIsGenerating(true)
+    setError('')
+    try {
+      const response = await fetch('/api/ai/ats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(atsData) })
+      if (!response.ok) throw new Error(await response.text())
+      const { result } = await response.json()
+      setAtsResult(result)
+    } catch (error: any) { 
+      setError('Error running ATS check: ' + error.message) 
+    }
+    finally { setIsGenerating(false) }
+  }
+
+  const downloadPDF = (ref: HTMLDivElement, filename: string) => {
+    if (!ref) return
+    html2canvas(ref).then(canvas => {
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgWidth = 210, pageHeight = 295, imgHeight = (canvas.height * imgWidth) / canvas.width
+      let heightLeft = imgHeight, position = 0
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+      while (heightLeft >= 0) { position = heightLeft - imgHeight; pdf.addPage(); pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= pageHeight }
+      pdf.save(filename)
+    })
+  }
+
+  const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); /* alert('Copied!') */ }
+
+  const tabs = [{ id: 'builder', label: 'Resume Builder', icon: FileText }, { id: 'cover-letter', label: 'Cover Letter', icon: Star }, { id: 'ats-check', label: 'ATS Check', icon: CheckCircle }] as const
 
   return (
-    <main className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-            AI Resume Builder
-          </h1>
-          <p className="text-xl text-gray-600">
-            Perfect resumes instantly. ATS-optimized, professional, startup-ready.
-          </p>
-          <div className="flex justify-center gap-4 mt-4">
-            <button
-              onClick={() => setLang('english')}
-              className={`px-4 py-2 rounded-lg font-medium ${lang === 'english' ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
-            >
-              English
-            </button>
-            <button
-              onClick={() => setLang('urdu')}
-              className={`px-4 py-2 rounded-lg font-medium ${lang === 'urdu' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              اردو
-            </button>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">Credits remaining: <span className="font-bold">{credits}</span></p>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-8 mb-12">
-          {/* Categories */}
-          <div>
-            <h3 className="text-2xl font-semibold mb-8">Choose Template</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategory(cat.id)}
-                  className={`p-6 border-2 rounded-2xl transition-all group ${
-                    category === cat.id
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50'
-                  }`}
-                >
-                  <div className={`font-semibold text-lg mb-2 ${category === cat.id ? 'text-emerald-600' : 'group-hover:text-emerald-600'}`}>
-                    {cat.name}
-                  </div>
-                  <div className="text-sm text-gray-600">{cat.desc}</div>
-                </button>
-              ))}
-            </div>
-            {category === 'custom' && (
-              <div className="mt-6">
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Enter your custom prompt..."
-                  className="w-full p-4 border border-gray-300 rounded-xl resize-vertical h-24 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="mb-8"><h1 className="text-3xl font-bold text-gray-900 mb-2">Resume & Career Tools</h1><p className="text-gray-600">Build professional resumes, cover letters, and check ATS compatibility</p></div>
+        {error && (
+          <Card variant="destructive" className="p-4 mb-6">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex items-start gap-2">
+                <Loader2 className="h-4 w-4 animate-spin mt-0.5 text-red-500 flex-shrink-0" />
+                <p>{error}</p>
               </div>
-            )}
-          </div>
-          
-          {/* Preview Editor */}
-          <div className="bg-white p-8 rounded-2xl shadow-xl border">
-            <h3 className="text-2xl font-semibold mb-6 text-center">Resume Preview</h3>
-            <div className="h-96 bg-gray-50 border-2 rounded-xl p-6 overflow-auto focus-within:ring-2 focus-within:ring-emerald-500">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-                  <p>Generating resume...</p>
-                </div>
-              ) : content ? (
-                <div
-                  contentEditable
-                  suppressContentEditableWarning
-                  className="w-full h-full outline-none prose prose-sm max-w-none whitespace-pre-wrap"
-                  onInput={(e) => setContent(e.currentTarget.innerText)}
-                >
-                  {content}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-500 p-8">
-                  <div className="text-3xl mb-4">📄</div>
-                  <p>Select template and click Generate</p>
-                  <p className="text-sm mt-2">AI-generated resume with real-time editing</p>
-                </div>
-              )}
-            </div>
-            <div className="mt-8 flex gap-4 justify-center">
-              <button
-                onClick={generateResume}
-                disabled={isLoading}
-                className="flex-1 bg-emerald-600 disabled:bg-emerald-400 hover:bg-emerald-700 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-xl transition-colors"
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setError('')
+                }}
+                className="w-full"
               >
-                {isLoading ? 'Generating...' : 'Generate Resume'}
-              </button>
-              <button
-                onClick={downloadResume}
-                disabled={!content}
-                className="flex-1 bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed hover:bg-green-700 text-white font-medium py-3 px-6 rounded-xl transition-colors"
-              >
-                Download MD
-              </button>
-            </div>
-          </div>
+                Clear Error
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {tabs.map((tab) => (<Button key={tab.id} variant={activeTab === tab.id ? 'default' : 'outline'} onClick={() => setActiveTab(tab.id)} className={cn('gap-2 whitespace-nowrap', activeTab === tab.id && 'bg-gradient-to-r from-blue-600 to-purple-600')}><tab.icon className="h-4 w-4" />{tab.label}</Button>))}
         </div>
 
-        <div className="mt-12 text-center">
-          <Link 
-            href="/dashboard" 
-            className="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-8 rounded-xl transition-colors"
-          >
-            ← Back to Dashboard
-          </Link>
-        </div>
+        {activeTab === 'builder' && (
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Card><CardHeader><CardTitle>1. Enter Your Details</CardTitle></CardHeader><CardContent className="p-6"><form onSubmit={onSubmit} className="space-y-6">
+              <div><label className="text-sm font-medium mb-2 block">Personal Information</label><div className="grid grid-cols-2 gap-2"><Input {...form.register('personal.name')} placeholder="Full Name" /><Input {...form.register('personal.email')} placeholder="Email" type="email" /><Input {...form.register('personal.phone')} placeholder="Phone" /><Input {...form.register('personal.location')} placeholder="Location" /></div></div>
+              <Card><CardHeader><CardTitle>Experience</CardTitle></CardHeader><CardContent className="space-y-4 p-6">{expFields.map((field, index) => (<div key={field.id} className="flex gap-2 items-end"><Input {...form.register(`experience.${index}.title`)} placeholder="Job Title" /><Input {...form.register(`experience.${index}.company`)} placeholder="Company" /><Input {...form.register(`experience.${index}.dates`)} placeholder="Dates" /><Button type="button" variant="destructive" onClick={() => removeExp(index)} size="sm">Remove</Button></div>))}<Button type="button" variant="outline" onClick={() => appendExp({ title: '', company: '', dates: '', description: '' })} className="w-full">Add Experience</Button></CardContent></Card>
+              <Card><CardHeader><CardTitle>Education</CardTitle></CardHeader><CardContent className="space-y-4 p-6">{eduFields.map((field, index) => (<div key={field.id} className="flex gap-2 items-end"><Input {...form.register(`education.${index}.degree`)} placeholder="Degree" /><Input {...form.register(`education.${index}.school`)} placeholder="School" /><Input {...form.register(`education.${index}.dates`)} placeholder="Dates" /><Button type="button" variant="destructive" onClick={() => removeEdu(index)} size="sm">Remove</Button></div>))}<Button type="button" variant="outline" onClick={() => appendEdu({ degree: '', school: '', dates: '' })} className="w-full">Add Education</Button></CardContent></Card>
+              <div><label className="text-sm font-medium mb-2 block">Skills</label>{skillFields.map((field, index) => (<div key={field.id} className="flex gap-2 mb-2"><Input {...form.register(`skills.${index}`)} placeholder="e.g. React, Node.js" /><Button type="button" variant="destructive" onClick={() => removeSkill(index)} size="sm">Remove</Button></div>))}<Button type="button" variant="outline" onClick={() => appendSkill('')} className="w-full">Add Skill</Button></div>
+              <Card><CardHeader><CardTitle>Template</CardTitle></CardHeader><CardContent className="p-6"><select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg bg-white"><option value="">Auto...</option>{templates.map((t: any) => (<option key={t.id} value={t.id}>{t.name} {t.isPremium ? '(Premium)' : ''}</option>))}</select></CardContent></Card>
+              <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white">{isGenerating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><Bot className="mr-2 h-4 w-4" />Generate Resume</>}</Button>
+            </form></CardContent></Card>
+            <div><Card className="lg:sticky lg:top-8 h-fit"><CardHeader><CardTitle>2. Preview & Download</CardTitle></CardHeader><CardContent className="p-6">{preview || generatedResume ? (<div><div ref={previewRef} className="bg-white p-8 rounded-lg shadow-lg min-h-[600px]"><div dangerouslySetInnerHTML={{ __html: generatedResume.replace(/\n/g, '<br>') }} /></div><div className="flex gap-2 mt-4"><Button onClick={() => downloadPDF(previewRef.current!, 'resume.pdf')} className="flex-1"><Download className="mr-2 h-4 w-4" />Download PDF</Button><Button variant="outline" onClick={() => setPreview(false)}>Edit</Button></div></div>) : (<div className="text-center text-gray-500 py-12"><FileText className="mx-auto h-12 w-12 mb-4 opacity-40" /><p>Generated resume will appear here</p></div>)}</CardContent></Card></div>
+          </div>)}
+
+        {activeTab === 'cover-letter' && (
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Card><CardHeader><CardTitle>Cover Letter Generator</CardTitle></CardHeader><CardContent className="p-6 space-y-4">
+              <div><label className="text-sm font-medium mb-2 block">Your Name *</label><Input value={coverLetterData.name} onChange={(e) => setCoverLetterData({...coverLetterData, name: e.target.value})} placeholder="John Doe" /></div>
+              <div><label className="text-sm font-medium mb-2 block">Position *</label><Input value={coverLetterData.position} onChange={(e) => setCoverLetterData({...coverLetterData, position: e.target.value})} placeholder="Software Engineer" /></div>
+              <div><label className="text-sm font-medium mb-2 block">Company</label><Input value={coverLetterData.company} onChange={(e) => setCoverLetterData({...coverLetterData, company: e.target.value})} placeholder="Tech Company" /></div>
+              <div><label className="text-sm font-medium mb-2 block">Experience</label><Textarea value={coverLetterData.experience} onChange={(e) => setCoverLetterData({...coverLetterData, experience: e.target.value})} placeholder="5 years experience..." rows={4} /></div>
+              <div><label className="text-sm font-medium mb-2 block">Skills</label><Textarea value={coverLetterData.skills} onChange={(e) => setCoverLetterData({...coverLetterData, skills: e.target.value})} placeholder="JavaScript, React..." rows={3} /></div>
+              <Button onClick={handleCoverLetter} disabled={isGenerating} className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white">{isGenerating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><Star className="mr-2 h-4 w-4" />Generate Cover Letter</>}</Button>
+            </CardContent></Card>
+            <Card className="lg:sticky lg:top-8 h-fit"><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Generated Cover Letter</CardTitle>{generatedCoverLetter && (<div className="flex gap-2"><Button variant="outline" size="sm" onClick={() => copyToClipboard(generatedCoverLetter)}><Copy className="h-4 w-4 mr-1" />Copy</Button><Button size="sm" onClick={() => downloadPDF(coverLetterRef.current!, 'cover-letter.pdf')}><Download className="h-4 w-4 mr-1" />PDF</Button></div>)}</CardHeader><CardContent className="p-6">{generatedCoverLetter ? (<div ref={coverLetterRef} className="bg-white p-8 rounded-lg shadow-lg min-h-[500px]"><div className="whitespace-pre-wrap">{generatedCoverLetter}</div></div>) : (<div className="text-center text-gray-500 py-12"><FileText className="mx-auto h-12 w-12 mb-4 opacity-40" /><p>Your cover letter will appear here</p></div>)}</CardContent></Card>
+          </div>)}
+
+        {activeTab === 'ats-check' && (
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Card><CardHeader><CardTitle>ATS Compatibility Check</CardTitle></CardHeader><CardContent className="p-6 space-y-4">
+              <div><label className="text-sm font-medium mb-2 block">Resume Text *</label><Textarea value={atsData.resumeText} onChange={(e) => setAtsData({...atsData, resumeText: e.target.value})} placeholder="Paste your resume..." rows={10} /></div>
+              <div><label className="text-sm font-medium mb-2 block">Job Description *</label><Textarea value={atsData.jobDesc} onChange={(e) => setAtsData({...atsData, jobDesc: e.target.value})} placeholder="Paste job description..." rows={6} /></div>
+              <Button onClick={handleAtsCheck} disabled={isGenerating} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white">{isGenerating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Analyzing...</> : <><CheckCircle className="mr-2 h-4 w-4" />Check ATS Compatibility</>}</Button>
+            </CardContent></Card>
+            <Card className="lg:sticky lg:top-8 h-fit"><CardHeader><CardTitle>Analysis Results</CardTitle></CardHeader><CardContent className="p-6">{atsResult ? (<div className="bg-white p-6 rounded-lg shadow-lg whitespace-pre-wrap">{atsResult}</div>) : (<div className="text-center text-gray-500 py-12"><CheckCircle className="mx-auto h-12 w-12 mb-4 opacity-40" /><p>ATS results will appear here</p></div>)}</CardContent></Card>
+          </div>)}
       </div>
-    </main>
-  );
+    </div>
+  )
 }
 

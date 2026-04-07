@@ -1,24 +1,38 @@
-# TODO Progress Tracker
+# Sartrends SaaS Completion TODO
 
-## Current Resume Task (Reconstructed)
+## PHASE 1: STABILITY 
+- [x] Create this TODO.md
+- [x] Update app/layout.tsx (Tailwind, metadata, providers, css types)
+- [ ] Prisma db push & generate
+- [ ] Test server npm run dev no crash
+- [ ] Run test-stability.ts verify APIs
 
-- [x] Analyze currently available repository files
-- [x] Confirm missing files vs open editor tabs mismatch
-- [x] Get user confirmation to reconstruct missing AI flow files
+## PHASE 2: AUTH
+- [ ] Implement JWT auth
+- [ ] Fix /api/auth/login & register (bcrypt, JWT)
+- [ ] Fix auth pages UI (login/register)
+- [ ] Add session middleware
 
-## Implementation Steps
+## PHASE 3: DB
+- [ ] Seed admin user
+- [ ] Test credits payments models
 
-1. [ ] Create/refresh `TODO-RESUME.md` with actionable checkpoints
-2. [ ] Implement `lib/ai.ts` for AI generation abstraction
-3. [ ] Implement `lib/credits.ts` for credit checks and deduction
-4. [ ] Implement `app/api/ai/route.ts` for resume generation API
-5. [ ] Implement `middleware.ts` baseline protection/routing behavior
-6. [ ] Update `app/modules/resume/page.tsx` integration assumptions if needed
+## PHASE 4: AI
+- [ ] Implement /api/ai/marketing full (OpenAI + credits deduct)
+- [ ] Update stubs to use lib/ai.ts
 
-## Notes
+## PHASE 5: STRIPE
+- [ ] Fix /api/subscribe checkout
+- [ ] Add /api/stripe/webhook
+- [ ] On success: isPaid=true, credits+=100
 
-- Existing DB schema uses `User.credits` and SQLite Prisma.
-- `app/modules/resume/page.tsx` already posts to `/api/ai` expecting:
-  - success payload: `{ response: string, credits: number }`
-  - error payload: `{ error: string }`
-- Follow user-approved scope: steps **1, 2, 3** from the plan.
+## PHASE 6: FRONTEND
+- [ ] Full dashboard with AI input, credits display, subscribe btn
+- [ ] Loading/error states
+
+## PHASE 7-9: UX/SECURITY/FINAL
+- [ ] Middleware protect /dashboard
+- [ ] Polish UI
+- [ ] No errors test
+
+

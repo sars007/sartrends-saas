@@ -1,0 +1,36 @@
+﻿declare module 'lucide-react' {
+  export * from 'lucide-react';
+  export const Star: any;
+  export const Loader2: any;
+  export const Mail: any;
+  export const Lock: any;
+  export const ArrowRight: any;
+  export const Sparkles: any;
+  export const Check: any;
+  export const AlertCircle: any;
+  export const Trash2: any;
+  export const MessageCircle: any;
+  export const FileText: any;
+  export const Briefcase: any;
+  export const Shield: any;
+  export const Bot: any;
+  export const Download: any;
+  export const User: any;
+  export const Phone: any;
+  export const MapPin: any;
+  export const CreditCard: any;
+  export const Bell: any;
+  export const LogOut: any;
+  export const Save: any;
+  export const Send: any;
+  export const Copy: any;
+  export const RefreshCw: any;
+  export const Wand2: any;
+  export const Image: any;
+  export const Palette: any;
+  export const Type: any;
+  export const Layout: any;
+  export const Truck: any;
+  export const Users: any;
+}
+

@@ -3,75 +3,89 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"  // Easy local dev, change to postgresql prod
-}
-
-enum Plan {
-  free
-  pro
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  credits   Int      @default(10)
-  plan      Plan     @default(free)
-  expiresAt DateTime?
-  businesses  Json?   // Array of business summaries
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  email           String   @unique
+  hashedPassword  String?
+  role            String   @default("user")
+  plan            String   @default("free")
+  credits         Int      @default(10)
+  isPaid          Boolean  @default(false)
+  isAdmin         Boolean  @default(false)
+  name            String?
+  createdAt       DateTime @default(now())
+
+  payments            Payment[]
+  subscriptions       Subscription[]
+  creditTransactions  CreditTransaction[]
+  aiRequestLogs       AIRequestLog[]
+  accounts            Account[]
+  sessions            Session[]
+}
+
+model Account {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String  @db.ObjectId
+  providerId     String
+  providerType   String
+  @@unique([providerId, providerType])
+  @@map("accounts")
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  activeExpires DateTime
+  idleExpires   DateTime?
+  @@map("sessions")
+  @@index([userId])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount    Float    @default(20)
+  status    String   @default("pending")
+  method    String   @default("stripe")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  aiChats   AiChat[]
-  orders    Order[]
-  aiLogs    AiLog[]
-  startupIdeas StartupIdea[]
-  @@map("users")
 }
 
-model StartupIdea {
-  id              String     @id @default(cuid())
-  userId          String
-  niche           String
-  description     String
-  businessModel   String
-  validationScore Float?
-  status          String     @default("draft") // draft, validated, launched
-  createdAt       DateTime   @default(now())
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businesses      Business[]
-  @@map("startup_ideas")
+model Subscription {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plan      String   @default("pro")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
 }
 
-model Business {
-  id          String    @id @default(cuid())
-  startupId   String?
-  name        String
-  url         String?
-  revenueYTD  Float     @default(0)
-  analytics   Json?
-  status      String    @default("active")
-  createdAt   DateTime  @default(now())
-  idea        StartupIdea? @relation(fields: [startupId], references: [id])
-  @@map("businesses")
+model CreditTransaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount    Int
+  type      String
+  reason    String
+  createdAt DateTime @default(now())
 }
 
-model AiChat {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("ai_chats")
+model AIRequestLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  prompt    String
+  response  String
+  createdAt DateTime @default(now())
 }
 
-model Order {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("orders")
-}
-
-model AiLog {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("ai_logs")
-}
