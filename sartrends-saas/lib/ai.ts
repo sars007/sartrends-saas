@@ -1,82 +1,75 @@
-export type GenerateAiInput = {
-  prompt: string;
-  lang?: "english" | "urdu";
-};
+﻿import OpenAI from 'openai'
+import { prisma } from './db'
+import { deductCredits, getUserCredits } from './credits'
+import { truncatePrompt } from './utils'
 
-const fallbackEnglish = `# Professional Resume
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
-## Summary
-Results-driven Software Engineer with strong experience in React, Next.js, Node.js, and product-focused development. Proven ability to deliver performant web applications and measurable business outcomes.
-
-## Skills
-- React, Next.js, TypeScript
-- Node.js, API Design
-- Prisma, SQL
-- TailwindCSS, UI Systems
-- AI-assisted product workflows
-
-## Experience
-### Senior Software Engineer
-- Built and scaled SaaS modules, improving user retention and reducing onboarding friction.
-- Implemented AI-powered generation workflows with strong UX and reliability patterns.
-
-### Full Stack Developer
-- Delivered end-to-end features across frontend and backend with measurable performance gains.
-
-## Education
-Bachelor's Degree in Computer Science
-
-## Certifications
-- Modern Web Development
-- Cloud Fundamentals
-`;
-
-const fallbackUrdu = `# پروفیشنل ریزیومے
-
-## خلاصہ
-نتائج پر مبنی سافٹ ویئر انجینئر جسے React، Next.js، Node.js اور پراڈکٹ ڈویلپمنٹ کا مضبوط تجربہ حاصل ہے۔
-
-## مہارتیں
-- React, Next.js, TypeScript
-- Node.js, API Design
-- Prisma, SQL
-- TailwindCSS
-- AI ورک فلو
-
-## تجربہ
-### سینئر سافٹ ویئر انجینئر
-- SaaS ماڈیولز تیار کیے اور بہتر بنائے۔
-- AI جنریشن فیچرز نافذ کیے۔
-
-## تعلیم
-بیچلر ان کمپیوٹر سائنس
-`;
-
-export async function generateAIResponse(input: GenerateAiInput): Promise<string> {
-  const prompt = input.prompt?.trim();
-  if (!prompt) {
-    throw new Error("Prompt is required.");
-  }
-
-  const model = process.env.AI_MODEL ?? "llama3.2";
-  const ollamaUrl = process.env.OLLAMA_URL ?? "http://127.0.0.1:11434/api/generate";
-
+async function openaiWithTimeout(prompt: string, model = 'gpt-4o-mini', timeoutMs = 30000): Promise<string> {
+  console.log('START OPENAI CALL');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
   try {
-    const res = await fetch(ollamaUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        prompt: `${input.lang === "urdu" ? "Respond in Urdu.\n" : "Respond in English.\n"}${prompt}`,
-        stream: false,
-      }),
+    const safePrompt = truncatePrompt(prompt);
+    const response = await openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: safePrompt }],
+      temperature: 0.3,
+      max_tokens: 4000,
+      timeout: timeoutMs,
+      signal: controller.signal,
     });
-
-    if (!res.ok) throw new Error(`OLLAMA_HTTP_${res.status}`);
-    const data = (await res.json()) as { response?: string };
-    if (!data?.response) throw new Error("OLLAMA_EMPTY_RESPONSE");
-    return data.response;
-  } catch {
-    return input.lang === "urdu" ? fallbackUrdu : fallbackEnglish;
+    clearTimeout(timeoutId);
+    console.log('DONE OPENAI CALL');
+    return response.choices[0].message.content || '';
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError' || error.message.includes('timeout')) {
+      throw new Error('OpenAI call timed out');
+    }
+    throw error;
   }
 }
+
+export async function generateAI(prompt: string, model = 'gpt-4o-mini'): Promise<string> {
+  return openaiWithTimeout(prompt, model);
+}
+
+export async function generateHSE(userId: string, docType: string, details: any, templateId?: string): Promise<string> {
+  if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not set')
+  
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user?.isPaid) await deductCredits(userId, 5, 'HSE gen')
+  
+  let prompt = `Generate HSE ${docType} document. Output structured JSON: {
+  "title": "string",
+  "sections": [
+    {"title": "string", "content": "markdown"}
+  ],
+  "hazards": array,
+  "risks": array,
+  "controls": array,
+  "ppe": array,
+  "emergency": "string",
+  "responsibilities": array
+}. Include hazard identification, risk levels (High/Medium/Low), control measures, PPE, emergency response, responsibility matrix. Details: ${truncatePrompt(JSON.stringify(details))} Professional, editable markdown sections.`
+  
+  if (templateId) {
+    const template = await prisma.template.findUnique({ where: { id: templateId } })
+    if (template) prompt = template.content.replace('{details}', truncatePrompt(JSON.stringify(details))) + '\nJSON format required.'
+  }
+  
+  const result = await generateAI(prompt)
+  return result
+}
+
+// Other funcs...
+export async function generateDocument(userId: string, type: string, details: any): Promise<string> {
+  const prompt = `Generate ${type} HSE document as structured JSON/markdown. Details: ${truncatePrompt(JSON.stringify(details))}`
+  if (!await prisma.user.findFirst({ where: { id: userId, isPaid: true } })) await deductCredits(userId, 5, 'doc gen')
+  return generateAI(prompt)
+}
+

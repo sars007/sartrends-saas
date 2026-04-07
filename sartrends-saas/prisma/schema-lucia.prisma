@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  hashedPassword String?
+  role      String   @default("user")
+  plan      String   @default("free")
+  credits   Int      @default(10)
+  isPaid    Boolean  @default(false)
+  isAdmin   Boolean  @default(false)
+  name      String?
+  createdAt DateTime @default(now())
+
+  payments            Payment[]
+  subscriptions       Subscription[]
+  creditTransactions  CreditTransaction[]
+  aiRequestLogs       AIRequestLog[]
+  accounts            Account[]
+  sessions            Session[]
+}
+
+model Account {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  providerId String
+  providerType String
+  @@unique([providerId, providerType])
+  @@map("accounts")
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  activeExpires DateTime
+  idleExpires  DateTime?
+  @@unique([id, userId])
+  @@map("sessions")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount     Float    @default(20)
+  status     String   @default("pending")
+  method     String   @default("stripe")
+  createdAt  DateTime @default(now())
+}
+
+model Subscription {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plan       String   @default("pro")
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+}
+
+model CreditTransaction {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount     Int
+  type       String
+  reason     String
+  createdAt  DateTime @default(now())
+}
+
+model AIRequestLog {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  prompt     String
+  response   String
+  createdAt  DateTime @default(now())
+}
+

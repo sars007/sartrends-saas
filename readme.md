@@ -1,22 +1,13 @@
-# A SaaS Platform
+# Sartrends SaaS
 
-This is a SaaS (Software as a Service) platform project.
+AI-powered SaaS platform with modules for AI studio, resume builder, orders, studio, documents, subscriptions.
 
-## Features
-- User authentication
-- Dashboard
-- Subscription system
-- API integration
+## Setup
+1. cp .env.example .env.local (if exists)
+2. Set DATABASE_URL in .env.local (PostgreSQL)
+3. npm install
+4. npx prisma generate && npx prisma db push
+5. npm run dev
 
-## Tech Stack
-- Frontend: (React / Next.js etc.)
-- Backend: (Node.js / Django etc.)
-- Database: (MongoDB / MySQL)
-
-## Installation
-
-```bash
-git clone https://github.com/sars007/a-saas-platform.git
-cd a-saas-platform
-npm install
-npm run dev
+## Deploy
+Vercel (root dir: . )
