@@ -1,17 +1,38 @@
-# Project Stabilization TODO - Progress Tracker
+# Sartrends SaaS Completion TODO
 
-## Current Status
-Steps 1-6 ✅ Complete (package.json fixes, UI components created, npm install, Prisma setup, .gitignore)
+## PHASE 1: STABILITY 
+- [x] Create this TODO.md
+- [x] Update app/layout.tsx (Tailwind, metadata, providers, css types)
+- [ ] Prisma db push & generate
+- [ ] Test server npm run dev no crash
+- [ ] Run test-stability.ts verify APIs
 
-## Remaining Steps [Pending ⛔]
-7. [⛔] Git commit/push: cd sartrends-saas && git add . && git commit -m \"Stabilization fixes: UI components, deps, seed DB\" && git push origin blackboxai/production-fixes
+## PHASE 2: AUTH
+- [ ] Implement JWT auth
+- [ ] Fix /api/auth/login & register (bcrypt, JWT)
+- [ ] Fix auth pages UI (login/register)
+- [ ] Add session middleware
 
-8. [⛔] Build verification: cd sartrends-saas && npm run build (expect zero errors)
+## PHASE 3: DB
+- [ ] Seed admin user
+- [ ] Test credits payments models
 
-## Next Actions
-- Check if on branch 'blackboxai/production-fixes' or create it
-- Execute git commands
-- Run build
-- Mark complete
+## PHASE 4: AI
+- [ ] Implement /api/ai/marketing full (OpenAI + credits deduct)
+- [ ] Update stubs to use lib/ai.ts
 
-**Updated:** $(date)
+## PHASE 5: STRIPE
+- [ ] Fix /api/subscribe checkout
+- [ ] Add /api/stripe/webhook
+- [ ] On success: isPaid=true, credits+=100
+
+## PHASE 6: FRONTEND
+- [ ] Full dashboard with AI input, credits display, subscribe btn
+- [ ] Loading/error states
+
+## PHASE 7-9: UX/SECURITY/FINAL
+- [ ] Middleware protect /dashboard
+- [ ] Polish UI
+- [ ] No errors test
+
+

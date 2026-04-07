@@ -1,28 +1,57 @@
-﻿export async function POST(req: Request) {
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { generateAI } from '@/lib/ai'
+import { deductCredits } from '@/lib/credits'
+import { prisma } from '@/lib/prisma'
+
+export async function POST(req: NextRequest) {
   try {
-    const { prompt } = await req.json();
+    const { prompt } = await req.json()
+    
+    if (!prompt || typeof prompt !== 'string') {
+      return NextResponse.json({ error: 'Prompt required' }, { status: 400 })
+    }
 
-    return new Response(JSON.stringify({
-      result: generateFallback(prompt || "Sample Product")
-    }), {
-      headers: { "Content-Type": "application/json" }
-    });
+    // Mock user for now, replace with auth later
+    const mockUserId = 'user123'
+    
+    // Admin bypass credits
+    const user = await prisma.user.findUnique({ where: { id: mockUserId } })
+    if (!user?.isAdmin) {
+      await deductCredits(mockUserId, 1, 'AI marketing generation')
+    }
 
-  } catch (error) {
-    return new Response(JSON.stringify({
-      result: generateFallback("Default Product")
-    }), { status: 200 });
+    const result = await generateAI(prompt, 'gpt-4o-mini')
+
+    // Log usage
+    await prisma.aIRequestLog.create({
+      data: {
+        userId: mockUserId,
+        prompt,
+        response: result,
+      }
+    })
+
+    return NextResponse.json({ 
+      result,
+      creditsLeft: user?.credits || 10 
+    })
+
+  } catch (error: any) {
+    console.error('AI marketing error:', error)
+    return NextResponse.json({ 
+      error: 'Generation failed',
+      result: `Fallback marketing copy for "${prompt || 'product'}"
+
+✔ High quality product
+✔ Great price
+✔ Trusted brand
+
+Get yours today!`
+    }, { status: 200 })
   }
 }
 
-function generateFallback(prompt: string) {
-  return `🔥 Marketing Copy
-
-Product: ${prompt}
-
-✔ High quality
-✔ Affordable price
-✔ Trusted by customers
-
-👉 Order now before stock runs out!`;
+export async function GET() {
+  return NextResponse.json({ ok: true })
 }
+
