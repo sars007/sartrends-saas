@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+}
+
+enum Role {
+  user
+  admin
+  driver
+  broker
+  dispatcher
+}
+
+enum Plan {
+  single
+  team
+  agency
+}
+
+enum SubStatus {
+  pending
+  active
+  expired
+}
+
+enum TrailerType {
+  dryVan
+  flatbed
+  reefer
+  tanker
+  stepdeck
+}
+
+enum LoadStatus {
+  pending
+  accepted
+  inTransit
+  completed
+  closed
+}
+
+enum PayStatus {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String     @unique
+  password      String
+  role          Role       @default(user)
+  subscription  Subscription?
+  loads         Load[]
+  driver        Driver?
+  payments      Payment[]
+  sessions      Session[]
+  courseAccesses CourseAccess[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String   @unique
+  ip        String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  @@map("sessions")
+}
+
+model Subscription {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String     @unique @db.ObjectId
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan           Plan       @default(single)
+  allowedSessions Int
+  startDate      DateTime   @default(now())
+  expiryDate     DateTime?
+  status         SubStatus  @default(pending)
+
+  @@map("subscriptions")
+}
+
+model Load {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  brokerId        String      @db.ObjectId
+  broker          User        @relation(fields: [brokerId], references: [id])
+  pickupLocation  String
+  dropoffLocation String
+  distance        Float
+  ratePerMile     Float
+  totalRate       Float
+  weight          Float
+  trailerType     TrailerType
+  date            DateTime
+  status          LoadStatus @default(pending)
+  isHot           Boolean @default(false)
+  appliedDrivers  Json?
+  brokerContact   Json?
+
+  @@map("loads")
+}
+
+model Driver {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String @unique @db.ObjectId
+  user        User   @relation(fields: [userId], references: [id])
+  truckType   String
+  location    String
+  availability Boolean @default(true)
+  rating      Float  @default(0)
+  earnings    Float  @default(0)
+  stats       Json?
+
+  @@map("drivers")
+}
+
+model Payment {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  user          User     @relation(fields: [userId], references: [id])
+  screenshotUrl String
+  status        PayStatus @default(pending)
+  amount        Float?
+  approvedAt    DateTime?
+
+  @@map("payments")
+}
+
+model Course {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  price       Float         @default(30)
+  isActive    Boolean       @default(false)
+  contents    CourseContent[]
+  accesses    CourseAccess[]
+
+  @@map("courses")
+}
+
+model CourseContent {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  courseId String @db.ObjectId
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title   String
+  content String
+  videoUrl String?
+  order   Int
+  isPreview Boolean @default(false)
+
+  @@map("course_contents")
+}
+
+model CourseAccess {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  courseId    String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  course      Course   @relation(fields: [courseId], references: [id])
+  purchasedAt DateTime @default(now())
+  progress    Json?
+
+  @@unique([userId, courseId])
+  @@map("course_accesses")
+}
